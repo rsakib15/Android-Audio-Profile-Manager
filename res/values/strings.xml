@@ -1,0 +1,18 @@
+
+<resources>
+
+
+    <string name="app_name">Service</string>
+    <string name="btn_start">Start</string>
+    <string name="btn_stop">Stop</string>
+    <string name="btn_vibrate">Vibrate</string>
+    <string name="btn_silent">Silent</string>
+    <string name="btn_ring">Ring</string>
+    
+    
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray">#EEEEEE</color>
+    
+   
+</resources>
