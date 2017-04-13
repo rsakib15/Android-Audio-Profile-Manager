@@ -67,7 +67,13 @@ public class Servicemain extends IntentService {
     SensorEventListener proximityListener=new SensorEventListener() {
 		//@Override
 		public void onSensorChanged(SensorEvent event) {
-			prox=event.values[0];
+			prox=event.values[0];   
+			if(prox==0){
+				audio.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+			}
+			else{
+				audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+			}		
 			showToast(String.valueOf(prox));
 		}
 		
@@ -84,15 +90,21 @@ public class Servicemain extends IntentService {
 			float x = acc[0];
 	        float y = acc[1];
 	        float z = acc[2];
-	        mAccelLast = mAccelCurrent;
-	        mAccelCurrent = FloatMath.sqrt(x*x + y*y + z*z);
-	        
-	        float delta = 0.8f;
-			mAccel = mAccel * 0.9f + delta;
-			
-			if(mAccel>3){
-				showToast(String.valueOf(mAccel));
-			}
+
+	        float norm_Of_g =FloatMath.sqrt(x * x + y * y + z * z);
+
+	        // Normalize the accelerometer vector
+	        x = (x / norm_Of_g);
+	        y = (y / norm_Of_g);
+	        z = (z / norm_Of_g);
+	        int inclination = (int) Math.round(Math.toDegrees(Math.acos(y)));
+	        Log.i("tag","incline is:"+inclination);
+
+	        if (inclination < 25 || inclination > 155)
+	        {
+	            // device is flat
+	            showToast("flat");
+	        }
 	        
 			//showToast("x: " + String.valueOf(acc[0]) + " y: " + String.valueOf(acc[1]) + " z: " + String.valueOf(acc[2]) );
 		}
@@ -110,20 +122,9 @@ public class Servicemain extends IntentService {
 				mSensorManager.registerListener(proximityListener, proximity, SensorManager.SENSOR_DELAY_NORMAL);
 				mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_UI);
 				while(Servicemain.isRunning==true){
-				
-			        
-					if(prox==0){
-						audio.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-					}
-					else{
-						audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-					}
-					
-					
-					
-					
+
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(100000);
 							
 					} 
 					catch (InterruptedException e) {
