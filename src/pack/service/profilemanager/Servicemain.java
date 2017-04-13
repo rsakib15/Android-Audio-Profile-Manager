@@ -124,12 +124,12 @@ public class Servicemain extends IntentService {
 			        if (z > 9.0 && (x<=0.0) && (y<=0.0))
 			        {
 			            // device is flat
-			        	 Log.d("screen up","up");
+			        	 showToast("UP");
 			        }
 			        if (z < 0.0  && (x<=0.0) && (y<=0.0))
 			        {
 			            // device is flat
-			            Log.d("screen down","down");
+			            showToast("down");
 			        }
 					try {
 						Thread.sleep(10000);
