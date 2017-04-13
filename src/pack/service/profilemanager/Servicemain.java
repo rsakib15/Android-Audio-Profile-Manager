@@ -12,6 +12,7 @@ import android.media.AudioManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.FloatMath;
 import android.util.Log;
 import android.widget.Toast;
  
@@ -26,6 +27,10 @@ public class Servicemain extends IntentService {
 	private Handler myServiceHandler;
 	private float prox;
 	public float acc[];
+	
+	float mAccel = (float) 0.00;
+	float mAccelCurrent = SensorManager.GRAVITY_EARTH;
+	float mAccelLast = SensorManager.GRAVITY_EARTH;
 	
 	
     public Servicemain() {
@@ -48,6 +53,7 @@ public class Servicemain extends IntentService {
     public void onDestroy() {
     	super.onDestroy();
     	Log.d("Entry-Log","Inside onDestroy() on Servicemain()");
+    	showToast("Service Stoped");
     }
     
     @Override
@@ -75,7 +81,20 @@ public class Servicemain extends IntentService {
 		//@Override
 		public void onSensorChanged(SensorEvent event) {
 			acc=event.values;
-			showToast("x: " + String.valueOf(acc[0]) + " y: " + String.valueOf(acc[1]) + " z: " + String.valueOf(acc[2]) );
+			float x = acc[0];
+	        float y = acc[1];
+	        float z = acc[2];
+	        mAccelLast = mAccelCurrent;
+	        mAccelCurrent = FloatMath.sqrt(x*x + y*y + z*z);
+	        
+	        float delta = 0.8f;
+			mAccel = mAccel * 0.9f + delta;
+			
+			if(mAccel>3){
+				showToast(String.valueOf(mAccel));
+			}
+	        
+			//showToast("x: " + String.valueOf(acc[0]) + " y: " + String.valueOf(acc[1]) + " z: " + String.valueOf(acc[2]) );
 		}
 		//@Override
 		public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -86,14 +105,25 @@ public class Servicemain extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent arg0) {
 		// TODO Auto-generated method stub
-		 new Thread(new Runnable() {
+	 	 new Thread(new Runnable() {
 			public void run() {
 				mSensorManager.registerListener(proximityListener, proximity, SensorManager.SENSOR_DELAY_NORMAL);
 				mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_UI);
 				while(Servicemain.isRunning==true){
+				
+			        
+					if(prox==0){
+						audio.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+					}
+					else{
+						audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+					}
+					
+					
+					
+					
 					try {
-							//showToast("Running IntentService");
-							Thread.sleep(100000);
+						Thread.sleep(5000);
 							
 					} 
 					catch (InterruptedException e) {

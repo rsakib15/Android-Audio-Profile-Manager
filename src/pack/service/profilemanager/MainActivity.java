@@ -50,6 +50,7 @@ public class MainActivity extends Activity{
     
     public void stopClicked(View arg0){
     	Log.d("Entry-Log","Inside the StopClicked() on Service Activity");
+  
     	Servicemain.isRunning=false;
     	stopService(i);
     	
