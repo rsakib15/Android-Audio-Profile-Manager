@@ -103,12 +103,12 @@ public class Servicemain extends IntentService {
 		        //int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
 		        //Log.i("tag","incline is:"+inclination);
 
-		        if (z > 9.0 && (x<=0.0) && (y<=0.0))
+		        if ((z > 9.0) && (x<=0.0) && (y<=0.0))
 		        {
 		            // device is flat
 		        	 showToast("UP");
 		        }
-		        if (z < 0.0  && (x<=0.0) && (y<=0.0))
+		        if ((z < 0.0)  && (x<=0.0) && (y<=0.0))
 		        {
 		            // device is flat
 		            showToast("down");
