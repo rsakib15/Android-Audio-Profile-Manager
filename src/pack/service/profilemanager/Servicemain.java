@@ -91,19 +91,24 @@ public class Servicemain extends IntentService {
 	        float y = acc[1];
 	        float z = acc[2];
 
-	        float norm_Of_g =FloatMath.sqrt(x * x + y * y + z * z);
+	        //float norm_Of_g =FloatMath.sqrt(x * x + y * y + z * z);
 
 	        // Normalize the accelerometer vector
-	        x = (x / norm_Of_g);
-	        y = (y / norm_Of_g);
-	        z = (z / norm_Of_g);
-	        int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
-	        Log.i("tag","incline is:"+inclination);
+	        //x = (x / norm_Of_g);
+	        //y = (y / norm_Of_g);
+	        //z = (z / norm_Of_g);
+	        //int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
+	        //Log.i("tag","incline is:"+inclination);
 
-	        if (inclination < 25 || inclination > 155)
+	        if (z > 9.0)
 	        {
 	            // device is flat
-	            showToast("flat");
+	            showToast("screen up");
+	        }
+	        if (z < 0.0)
+	        {
+	            // device is flat
+	            showToast("screen down");
 	        }
 	        
 			//showToast("x: " + String.valueOf(acc[0]) + " y: " + String.valueOf(acc[1]) + " z: " + String.valueOf(acc[2]) );
@@ -124,7 +129,7 @@ public class Servicemain extends IntentService {
 				while(Servicemain.isRunning==true){
 
 					try {
-						Thread.sleep(100000);
+						Thread.sleep(10000000);
 							
 					} 
 					catch (InterruptedException e) {
