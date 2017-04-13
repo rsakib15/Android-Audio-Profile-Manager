@@ -87,29 +87,7 @@ public class Servicemain extends IntentService {
 		//@Override
 		public void onSensorChanged(SensorEvent event) {
 			acc=event.values;
-			float x = acc[0];
-	        float y = acc[1];
-	        float z = acc[2];
-
-	        //float norm_Of_g =FloatMath.sqrt(x * x + y * y + z * z);
-
-	        // Normalize the accelerometer vector
-	        //x = (x / norm_Of_g);
-	        //y = (y / norm_Of_g);
-	        //z = (z / norm_Of_g);
-	        //int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
-	        //Log.i("tag","incline is:"+inclination);
-
-	        if (z > 9.0)
-	        {
-	            // device is flat
-	            showToast("screen up");
-	        }
-	        if (z < 0.0)
-	        {
-	            // device is flat
-	            showToast("screen down");
-	        }
+			
 	        
 			//showToast("x: " + String.valueOf(acc[0]) + " y: " + String.valueOf(acc[1]) + " z: " + String.valueOf(acc[2]) );
 		}
@@ -124,16 +102,39 @@ public class Servicemain extends IntentService {
 		// TODO Auto-generated method stub
 	 	 new Thread(new Runnable() {
 			public void run() {
+				mSensorManager.registerListener(proximityListener, proximity, SensorManager.SENSOR_DELAY_NORMAL);
+				mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_UI);
 				while(Servicemain.isRunning==true){
+					float x = acc[0];
+			        float y = acc[1];
+			        float z = acc[2];
+
+			        //float norm_Of_g =FloatMath.sqrt(x * x + y * y + z * z);
+
+			        // Normalize the accelerometer vector
+			        //x = (x / norm_Of_g);
+			        //y = (y / norm_Of_g);
+			        //z = (z / norm_Of_g);
+			        //int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
+			        //Log.i("tag","incline is:"+inclination);
+
+			        if (z > 9.0 && (x<=0.0) && (y<=0.0))
+			        {
+			            // device is flat
+			        	 Log.d("screen up","up");
+			        }
+			        if (z < 0.0  && (x<=0.0) && (y<=0.0))
+			        {
+			            // device is flat
+			            Log.d("screen down","down");
+			        }
 					try {
-						Thread.sleep(10000000);
+						Thread.sleep(10000);
 							
 					} 
 					catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
-					mSensorManager.registerListener(proximityListener, proximity, SensorManager.SENSOR_DELAY_NORMAL);
-					mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_UI);
 				}
 				mSensorManager.unregisterListener(proximityListener);
 				mSensorManager.unregisterListener(accelListener);
