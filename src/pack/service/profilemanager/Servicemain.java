@@ -32,6 +32,8 @@ public class Servicemain extends IntentService {
 	float mAccelCurrent = SensorManager.GRAVITY_EARTH;
 	float mAccelLast = SensorManager.GRAVITY_EARTH;
 	
+	float x,y,z;
+	
 	
     public Servicemain() {
 		super("Servicemain Constructor");
@@ -88,6 +90,10 @@ public class Servicemain extends IntentService {
 		public void onSensorChanged(SensorEvent event) {
 			acc=event.values;
 			
+			 x = acc[0];
+	         y = acc[1];
+	         z = acc[2];
+			
 	        
 			//showToast("x: " + String.valueOf(acc[0]) + " y: " + String.valueOf(acc[1]) + " z: " + String.valueOf(acc[2]) );
 		}
@@ -105,9 +111,6 @@ public class Servicemain extends IntentService {
 				mSensorManager.registerListener(proximityListener, proximity, SensorManager.SENSOR_DELAY_NORMAL);
 				mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_UI);
 				while(Servicemain.isRunning==true){
-					float x = acc[0];
-			        float y = acc[1];
-			        float z = acc[2];
 
 			        //float norm_Of_g =FloatMath.sqrt(x * x + y * y + z * z);
 
