@@ -124,10 +124,7 @@ public class Servicemain extends IntentService {
 		// TODO Auto-generated method stub
 	 	 new Thread(new Runnable() {
 			public void run() {
-				mSensorManager.registerListener(proximityListener, proximity, SensorManager.SENSOR_DELAY_NORMAL);
-				mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_UI);
 				while(Servicemain.isRunning==true){
-
 					try {
 						Thread.sleep(10000000);
 							
@@ -135,6 +132,8 @@ public class Servicemain extends IntentService {
 					catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
+					mSensorManager.registerListener(proximityListener, proximity, SensorManager.SENSOR_DELAY_NORMAL);
+					mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_UI);
 				}
 				mSensorManager.unregisterListener(proximityListener);
 				mSensorManager.unregisterListener(accelListener);
