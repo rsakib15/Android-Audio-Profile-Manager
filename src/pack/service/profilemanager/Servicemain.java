@@ -97,7 +97,7 @@ public class Servicemain extends IntentService {
 	        x = (x / norm_Of_g);
 	        y = (y / norm_Of_g);
 	        z = (z / norm_Of_g);
-	        int inclination = (int) Math.round(Math.toDegrees(Math.acos(y)));
+	        int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
 	        Log.i("tag","incline is:"+inclination);
 
 	        if (inclination < 25 || inclination > 155)
