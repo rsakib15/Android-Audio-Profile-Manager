@@ -18,21 +18,29 @@ import android.widget.Toast;
  
 public class Servicemain extends IntentService {
 	private SensorManager mSensorManager;
-	private Sensor proximity,accelaration;
+	private Sensor proximity,accelaration,lightSensor;
 	private AudioManager audio;
 	
-	private static final String TAG = "MyService";
 	public static boolean isRunning  = false;
 	private Looper looper;
 	private Handler myServiceHandler;
+	
 	private float prox;
-	public float acc[];
+	public float accelar[];
+	public float light[];
 	
-	float mAccel = (float) 0.00;
-	float mAccelCurrent = SensorManager.GRAVITY_EARTH;
-	float mAccelLast = SensorManager.GRAVITY_EARTH;
+    private float mAccel;
+    private float mAccelCurrent;
+    private float mAccelLast;
+    
+    public long lastUpdate = 0;
+    public float last_x,last_y,last_z;
+    public static final int SHAKE_THRESHOLD = 200;
+    
+    boolean faceUp=false,inFrontHas=false,lightOn=false,shacking=false;
+   
+    float x,y,z;
 	
-	float x,y,z;
 	
 	
     public Servicemain() {
@@ -47,6 +55,7 @@ public class Servicemain extends IntentService {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		proximity=(Sensor) mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 		accelaration=(Sensor) mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		lightSensor = (Sensor)mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 		audio=(AudioManager)getSystemService(AUDIO_SERVICE);
 		audio.getRingerMode();
     }
@@ -70,17 +79,19 @@ public class Servicemain extends IntentService {
 		//@Override
 		public void onSensorChanged(SensorEvent event) {
 			prox=event.values[0];   
-			if(prox==0){
-				audio.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-			}
-			else{
-				audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-			}		
-			showToast(String.valueOf(prox));
+		    if (prox == 0){
+		    	Log.d("Proximity-Zero","Proximity : " + prox);
+		    	inFrontHas = true;
+		    } 
+		    else {
+		    	Log.d("Proximity-high","Proximity : " + prox);
+		    	inFrontHas = false;
+		    }
 		}
-		
+
 		//@Override
 		public void onAccuracyChanged(Sensor sensor, int accuracy) {
+			Log.d("Proximity-work","Proximity Changed");
 		}
 	};
 	
@@ -88,34 +99,61 @@ public class Servicemain extends IntentService {
 	SensorEventListener accelListener=new SensorEventListener() {
 		//@Override
 		public void onSensorChanged(SensorEvent event) {
-			acc=event.values;
-			
-			 x = acc[0];
-	         y = acc[1];
-	         z = acc[2];
-	         
-	       //float norm_Of_g =FloatMath.sqrt(x * x + y * y + z * z);
+			accelar=event.values;
+			x = accelar[0];
+			y = accelar[1];
+			z = accelar[2];
+			if(z> 2.0){
+		         faceUp = true;
+		         Log.d("Accelerometer-Works", "Mobile Display Up");
+		    } 
+		    else if (z <= 2.0){
+		         faceUp = false;
+		         Log.d("Accelerometer-Works", "Mobile Display Down");
+		    } 
+			 
+		    long curTime = System.currentTimeMillis();
+		    if ((curTime - lastUpdate) > 1000) {
+		    	  long diffTime = (curTime - lastUpdate);
+		          lastUpdate = curTime;
+		          x = accelar[0];
+		          y = accelar[1];
+		          z = accelar[2];
 
-		        // Normalize the accelerometer vector
-		        //x = (x / norm_Of_g);
-		        //y = (y / norm_Of_g);
-		        //z = (z / norm_Of_g);
-		        //int inclination = (int) Math.round(Math.toDegrees(Math.acos(z)));
-		        //Log.i("tag","incline is:"+inclination);
+		          float speed = Math.abs(x + y + z-last_x -last_y-last_z) / diffTime * 10000;
 
-		        if ((z > 9.0) && (x<=0.0) && (y<=0.0))
-		        {
-		            // device is flat
-		        	 showToast("UP");
-		        }
-		        if ((z < 0.0)  && (x<=0.0) && (y<=0.0))
-		        {
-		            // device is flat
-		            showToast("down");
-		        }
+		          if (speed > SHAKE_THRESHOLD) {
+		        	  Log.d("sensor", "shake detected w/ speed: " + speed);
+		              shacking=true;
+		              showToast("shake detected w/ speed: " + speed);
+		          }
+		          else {
+		              shacking = false;
+		          }
+		          
+		          last_x = x;
+		          last_y = y;
+		          last_z = z;
+		      }
+
+		}
+		//@Override
+		public void onAccuracyChanged(Sensor sensor, int accuracy) {
 			
-	        
-			//showToast("x: " + String.valueOf(acc[0]) + " y: " + String.valueOf(acc[1]) + " z: " + String.valueOf(acc[2]) );
+		}
+	};
+	
+	
+	SensorEventListener lightListener=new SensorEventListener() {
+		//@Override
+		public void onSensorChanged(SensorEvent event) {
+			light=event.values;
+		    if (light[0]< 15){
+		    	lightOn = false;
+		    }
+		    else if (light[0] >= 15){
+		        lightOn = true;
+		    }
 		}
 		//@Override
 		public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -129,11 +167,35 @@ public class Servicemain extends IntentService {
 	 	 new Thread(new Runnable() {
 			public void run() {
 				mSensorManager.registerListener(proximityListener, proximity, SensorManager.SENSOR_DELAY_NORMAL);
-				mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_UI);
+				mSensorManager.registerListener(accelListener, accelaration,SensorManager.SENSOR_DELAY_NORMAL);
+				mSensorManager.registerListener(lightListener,lightSensor,SensorManager.SENSOR_DELAY_NORMAL);
+
 				while(Servicemain.isRunning==true){
+					
+				    if (faceUp && !inFrontHas && audio.getRingerMode()!=AudioManager.RINGER_MODE_NORMAL){
+				    	Log.d("Switch-Profile", "Ring Mode");
+				    	audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+				    	audio.setStreamVolume(AudioManager.STREAM_RING,audio.getStreamMaxVolume(AudioManager.STREAM_RING),0);
+				    }
+
+				    else if (!faceUp && inFrontHas && !lightOn && audio.getRingerMode()!=AudioManager.RINGER_MODE_SILENT){
+				         Log.d("Switch-Profile", "Silent Mode");
+				         audio.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+				         if(audio.getMode()==AudioManager.RINGER_MODE_SILENT ) {
+				        	    //myAudioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+				        	 	audio.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER, AudioManager.VIBRATE_SETTING_OFF);
+				        }
+				    }
+				    
+				    else if (shacking && audio.getRingerMode()!=AudioManager.RINGER_MODE_VIBRATE){
+				        Log.d("Switch-Profile", "Pocket Mode");
+				        audio.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+				        audio.setStreamVolume(AudioManager.STREAM_RING,20,0);
+				    }
+				  
+				    
 					try {
 						Thread.sleep(10000);
-							
 					} 
 					catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
@@ -141,6 +203,7 @@ public class Servicemain extends IntentService {
 				}
 				mSensorManager.unregisterListener(proximityListener);
 				mSensorManager.unregisterListener(accelListener);
+				mSensorManager.unregisterListener(lightListener);
 			}
 		}).run();
 	}
