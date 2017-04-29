@@ -1,7 +1,6 @@
 package pack.service.profilemanager;
 
 import android.app.IntentService;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -10,9 +9,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
-import android.util.FloatMath;
 import android.util.Log;
 import android.widget.Toast;
  
@@ -22,26 +19,18 @@ public class Servicemain extends IntentService {
 	private AudioManager audio;
 	
 	public static boolean isRunning  = false;
-	private Looper looper;
-	private Handler myServiceHandler;
-	
 	private float prox;
 	public float accelar[];
 	public float light[];
 	
-    private float mAccel;
-    private float mAccelCurrent;
-    private float mAccelLast;
-    
     public long lastUpdate = 0;
     public float last_x,last_y,last_z;
-    public static final int SHAKE_THRESHOLD = 200;
+    public static final int SHAKE_THRESHOLD = 100;
     
-    boolean faceUp=false,inFrontHas=false,lightOn=false,shacking=false;
+    boolean faceUp=false,inFrontHas=false,lightOn=false,shacking=false,pocketOn=false;
    
     float x,y,z;
-	
-	
+
 	
     public Servicemain() {
 		super("Servicemain Constructor");
@@ -112,28 +101,18 @@ public class Servicemain extends IntentService {
 		         Log.d("Accelerometer-Works", "Mobile Display Down");
 		    } 
 			 
+			if(y<=-7.0 || y>=7.0 ){
+				pocketOn=true;
+			}
+			else{
+				pocketOn=false;
+			}
 		    long curTime = System.currentTimeMillis();
 		    if ((curTime - lastUpdate) > 1000) {
-		    	  long diffTime = (curTime - lastUpdate);
 		          lastUpdate = curTime;
 		          x = accelar[0];
 		          y = accelar[1];
 		          z = accelar[2];
-
-		          float speed = Math.abs(x + y + z-last_x -last_y-last_z) / diffTime * 10000;
-
-		          if (speed > SHAKE_THRESHOLD) {
-		        	  Log.d("sensor", "shake detected w/ speed: " + speed);
-		              shacking=true;
-		              showToast("shake detected w/ speed: " + speed);
-		          }
-		          else {
-		              shacking = false;
-		          }
-		          
-		          last_x = x;
-		          last_y = y;
-		          last_z = z;
 		      }
 
 		}
@@ -171,29 +150,33 @@ public class Servicemain extends IntentService {
 				mSensorManager.registerListener(lightListener,lightSensor,SensorManager.SENSOR_DELAY_NORMAL);
 
 				while(Servicemain.isRunning==true){
-					
-				    if (faceUp && !inFrontHas && audio.getRingerMode()!=AudioManager.RINGER_MODE_NORMAL){
+				    if (faceUp && !pocketOn){
+				    	Log.d("Switch-Profile", "Ring Mode");
+				    	audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);  
+				    	showToast("Normal Mode");
+				    }
+				    
+				    else if (faceUp && !lightOn && !pocketOn && !inFrontHas){
 				    	Log.d("Switch-Profile", "Ring Mode");
 				    	audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-				    	audio.setStreamVolume(AudioManager.STREAM_RING,audio.getStreamMaxVolume(AudioManager.STREAM_RING),0);
+				    	showToast("Normal Mode");
 				    }
-
-				    else if (!faceUp && inFrontHas && !lightOn && audio.getRingerMode()!=AudioManager.RINGER_MODE_SILENT){
+				    
+				    else if (!faceUp && inFrontHas && !lightOn && !pocketOn){ 
 				         Log.d("Switch-Profile", "Silent Mode");
+				         showToast("Silent Mode");
 				         audio.setRingerMode(AudioManager.RINGER_MODE_SILENT);
 				         if(audio.getMode()==AudioManager.RINGER_MODE_SILENT ) {
-				        	    //myAudioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 				        	 	audio.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER, AudioManager.VIBRATE_SETTING_OFF);
 				        }
 				    }
-				    
-				    else if (shacking && audio.getRingerMode()!=AudioManager.RINGER_MODE_VIBRATE){
+				       	    
+				    else if (pocketOn && inFrontHas && !lightOn){
 				        Log.d("Switch-Profile", "Pocket Mode");
+				        showToast("Pocket Mode");
 				        audio.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
-				        audio.setStreamVolume(AudioManager.STREAM_RING,20,0);
 				    }
-				  
-				    
+  
 					try {
 						Thread.sleep(10000);
 					} 
