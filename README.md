@@ -1,4 +1,4 @@
-# Android-Audio-Profile-Manager
+# Smart Audio Profile Manager
 
 The "Smart Audio Profile Manager" is a mobile application that automatically changes the audio profile of a device based on its position. This feature allows users to conveniently adjust the device's audio settings without manually changing them.
 
